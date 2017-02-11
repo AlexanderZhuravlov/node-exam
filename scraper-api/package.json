@@ -1,0 +1,47 @@
+{
+  "name": "scraper-api",
+  "version": "1.0.0",
+  "description": "scraper api service",
+  "main": "app.js",
+  "scripts": {
+    "lint": "eslint app.js",
+    "start": "babel-node app.js --presets es2015,stage-2",
+    "start:nodemon": "nodemon app.js --exec babel-node --presets es2015,stage-2",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlexanderZhuravlov/node-exam.git"
+  },
+  "keywords": [
+    "scraper",
+    "api",
+    "scrapping"
+  ],
+  "author": "Alexander Zhuravlov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AlexanderZhuravlov/node-exam/issues"
+  },
+  "homepage": "https://github.com/AlexanderZhuravlov/node-exam#readme",
+  "dependencies": {
+    "body-parser": "~1.16.0",
+    "co": "^4.6.0",
+    "cookie-parser": "~1.4.3",
+    "debug": "^2.6.1",
+    "ejs": "^2.5.5",
+    "express": "^4.14.1",
+    "got": "^6.7.1",
+    "htmlparser2": "^3.9.2",
+    "morgan": "^1.8.1"
+  },
+  "devDependencies": {
+    "babel": "^6.5.2",
+    "babel-cli": "^6.22.2",
+    "babel-eslint": "^7.1.1",
+    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-stage-2": "^6.22.0",
+    "eslint": "^3.15.0",
+    "nodemon": "^1.11.0"
+  }
+}
