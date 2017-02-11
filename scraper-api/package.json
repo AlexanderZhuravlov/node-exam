@@ -4,7 +4,6 @@
   "description": "scraper api service",
   "main": "app.js",
   "scripts": {
-    "lint": "eslint app.js",
     "start": "babel-node app.js --presets es2015,stage-2",
     "start:nodemon": "nodemon app.js --exec babel-node --presets es2015,stage-2",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -33,7 +32,8 @@
     "express": "^4.14.1",
     "got": "^6.7.1",
     "htmlparser2": "^3.9.2",
-    "morgan": "^1.8.1"
+    "morgan": "^1.8.1",
+    "serve-favicon": "^2.3.2"
   },
   "devDependencies": {
     "babel": "^6.5.2",
