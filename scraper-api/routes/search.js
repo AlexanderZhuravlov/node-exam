@@ -4,6 +4,8 @@
 import express from 'express';
 import co from 'co';
 import { validateParams } from '../helpers/validator';
+import redis from '../helpers/redis';
+import { scrapHTML } from '../helpers/scraper';
 const router = express.Router();
 
 /**
@@ -13,14 +15,18 @@ router.get('/', (req, res, next) => {
   co(function* () {
     // Validate params
     const params = yield validateParams(req.query);
+
     // Check if result available into Redis
+    //console.log(key);
 
     // Scrap HTML
+    const scrappedHTML = yield scrapHTML(params);
+
 
     // Save result to Redis
 
     // Output result
-    res.json({ endpoint: 'GET search', prms: params });
+    res.json({ endpoint: 'GET search', prms: params, out: scrappedHTML });
   })
   .catch(error => next({ message: error }));
 });
