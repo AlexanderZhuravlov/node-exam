@@ -5,7 +5,7 @@ import config from '../config';
 function validateParams(params) {
   return new Promise((resolve, reject) => {
     let { url, element, level } = params;
-    level = level || config.SEARCH_LEVEL;
+    level = level || config.DEFAULT_SEARCH_LEVEL;
 
     if (!url || !element) reject(errors.missingParams);
     if (!validator.isURL(url)) reject(errors.errorUrlParam);

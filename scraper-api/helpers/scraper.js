@@ -1,75 +1,59 @@
 import got from 'got';
-import htmlparser from 'htmlparser2';
 import cheerio from 'cheerio';
 import co from 'co';
+import queue from 'queue';
+import config from '../config';
+import errors from '../config/errors';
+
+function checkResponse(response) {
+  // Get response content-type
+  let contentType = response.headers['content-type'];
+  contentType = contentType.split(';')[0];
+
+  if (config.ACCEPTABLE_CONTENT_TYPES.indexOf(contentType) !== -1
+    && response.statusMessage === config.ACCEPTABLE_STATUS_MESSAGE
+    && response.statusCode === config.ACCEPTABLE_STATUS_CODE) {
+    return true;
+  }
+  return false;
+}
 
 function getSiteHTML(url) {
   return new Promise((resolve, reject) => {
     got(url)
       .then((response) => {
+        if (!checkResponse(response)) {
+          reject(errors.notAcceptableResponse);
+        }
         resolve(response.body);
       })
       .catch((error) => {
-        reject(error.response.body);
+        reject(error);
       });
   });
 }
 
+
 function parseHTML(data, element) {
   return new Promise((resolve, reject) => {
-    let output = [];
-    const parser = cheerio.load(data);
+    let { outputHTML, output_URLS } = [];
+    try {
+      const parser = cheerio.load(data);
 
-    parser(element).each(function() {
-      const elem = parser(this);
-      console.log(elem.html());
-      output.push(elem.html());
-    });
+      parser(element).each(function () {
+        const elem = parser(this);
 
-    resolve(output);
+        outputHTML.push(elem.html());
 
-    /*let output = [];
-    const handler = new htmlparser.DomHandler( (error, dom) => {
-      if (error) reject(err);
-
-      let html = dom
-
-
-      //output.push(dom);
-      console.log(dom);
-    });
-    const parser = new htmlparser.Parser(handler);
-    parser.write(data);
-    parser.onend(resolve(output));
-    parser.onerror((err) => {
+      });
+      resolve({ outputHTML, output_URLS });
+    } catch (err) {
       reject(err);
-    });
-    parser.done();*/
-
-
-    /*let output = [];
-    let flag = false;
-
-    const parser = new htmlparser.Parser({
-      onopentag: (name) => {
-        if (name === element) flag = true;
-      },
-      ontext: (text) => {
-        output.push(text);
-      },
-      onclosetag: (tagname) => {
-        if (tagname === element) flag = false;
-      },
-    }, { decodeEntities: true });
-    parser.write(data);
-    parser.onend(resolve(output));
-    parser.onerror((err) => {
-      reject(err);
-    });*/
+    }
   });
 }
 
-function getLinksFromHTML(html, level) {
+function findAllURLS(html){
   return new Promise((resolve, reject) => {
 
 
@@ -78,9 +62,14 @@ function getLinksFromHTML(html, level) {
 
 function scrapHTML(params) {
   const { url, element, level } = params;
+  let currentLevel = 0;
   return co(function* () {
+    // First Iteration
     const html = yield getSiteHTML(url);
-    const parsedHTML = yield parseHTML(html, element);
+    const { outHTML, outURLS } = yield parseHTML(html, element);
+
+
+
 
 
 
