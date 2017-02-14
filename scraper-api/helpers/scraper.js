@@ -58,6 +58,7 @@ function parseHTML(data, element) {
     // TODO: add separate function and rebuild to Promises.all
     // http://stackoverflow.com/questions/33506986/node-js-cheerio-request-inside-a-loop
     // https://franciskim.co/promise-based-scraper-in-node-js/
+    // https://medium.com/@adinugroho/webscraping-with-nodejs-and-cheerio-c3971611736a#.hvb4x14ly
     try {
       const parser = cheerio.load(data);
       parser(element).each(function () {
