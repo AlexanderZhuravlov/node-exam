@@ -1,7 +1,7 @@
 import got from 'got';
 import cheerio from 'cheerio';
 import co from 'co';
-import queue from 'queue';
+import queue from '../helpers/queue';
 import config from '../config';
 import errors from '../config/errors';
 
@@ -16,6 +16,22 @@ function checkResponse(response) {
     return true;
   }
   return false;
+}
+
+function findAllURLS(html) {
+  // TODO: add separate function and rebuild to Promises.all
+  try {
+    let linksArray = [];
+    const parser = cheerio.load(html);
+    parser('a').each(function () {
+      const elem = parser(this);
+      console.log(elem.attr('href'));
+      linksArray.push(elem.attr('href'));
+    });
+    return linksArray;
+  } catch (err) {
+    throw err;
+  }
 }
 
 function getSiteHTML(url) {
@@ -36,26 +52,21 @@ function getSiteHTML(url) {
 
 function parseHTML(data, element) {
   return new Promise((resolve, reject) => {
-    let { outputHTML, output_URLS } = [];
+    let outputHTML = [];
+    let outputURLS = [];
+
+    // TODO: add separate function and rebuild to Promises.all
     try {
       const parser = cheerio.load(data);
-
       parser(element).each(function () {
         const elem = parser(this);
-
-        outputHTML.push(elem.html());
-
+        outputHTML.push(elem.text());
+        outputURLS.push(findAllURLS(elem.html()));
       });
-      resolve({ outputHTML, output_URLS });
+      resolve({ outputHTML, outputURLS });
     } catch (err) {
       reject(err);
     }
-  });
-}
-
-function findAllURLS(html){
-  return new Promise((resolve, reject) => {
-
 
   });
 }
@@ -68,15 +79,11 @@ function scrapHTML(params) {
     const html = yield getSiteHTML(url);
     const { outHTML, outURLS } = yield parseHTML(html, element);
 
+    console.log(outURLS);
 
-
-
-
-
-
-    return parsedHTML;
+    return outURLS;
   })
-  .catch((error) => { throw new Error(error); });
+  .catch((error) => { throw error; });
 }
 
 module.exports = {
