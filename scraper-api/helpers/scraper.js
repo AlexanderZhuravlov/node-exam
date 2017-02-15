@@ -2,6 +2,8 @@ import got from 'got';
 import cheerio from 'cheerio';
 import co from 'co';
 import queue from '../helpers/queue';
+import { validateURL } from '../helpers/validator';
+import { getDomain } from '../helpers/general';
 import config from '../config';
 import errors from '../config/errors';
 
@@ -18,22 +20,6 @@ function checkResponse(response) {
   return false;
 }
 
-function findAllURLS(html) {
-  // TODO: add separate function and rebuild to Promises.all
-  try {
-    let linksArray = [];
-    const parser = cheerio.load(html);
-    parser('a').each(function () {
-      const elem = parser(this);
-      console.log(elem.attr('href'));
-      linksArray.push(elem.attr('href'));
-    });
-    return linksArray;
-  } catch (err) {
-    throw err;
-  }
-}
-
 function getSiteHTML(url) {
   return new Promise((resolve, reject) => {
     got(url)
@@ -43,50 +29,65 @@ function getSiteHTML(url) {
         }
         resolve(response.body);
       })
-      .catch((error) => {
+      .catch(error => {
         reject(error);
       });
   });
 }
 
+function findAllURLS(html, domain) {
+  try {
+    const linksArray = [];
+    const parser = cheerio.load(html);
+    parser('a').each(function () {
+      const elem = parser(this);
+      const href = elem.attr('href');
+      if (validateURL(href, domain)) {
+        linksArray.push(href);
+      }
+    });
+    if (linksArray.length > 0) return linksArray;
+    return null;
+  } catch (err) {
+    throw err;
+  }
+}
 
-function parseHTML(data, element) {
+function parseHTML(data, element, domain) {
   return new Promise((resolve, reject) => {
-    let outputHTML = [];
+    const outputHTML = [];
     let outputURLS = [];
-
-    // TODO: add separate function and rebuild to Promises.all
-    // http://stackoverflow.com/questions/33506986/node-js-cheerio-request-inside-a-loop
-    // https://franciskim.co/promise-based-scraper-in-node-js/
-    // https://medium.com/@adinugroho/webscraping-with-nodejs-and-cheerio-c3971611736a#.hvb4x14ly
     try {
       const parser = cheerio.load(data);
       parser(element).each(function () {
         const elem = parser(this);
-        outputHTML.push(elem.text());
-        outputURLS.push(findAllURLS(elem.html()));
+        outputHTML.push(elem.html());
+        const links = findAllURLS(elem.html(), domain);
+        if (Array.isArray(links)) outputURLS = outputURLS.concat(links);
       });
+      outputURLS = Array.from(new Set(outputURLS));
       resolve({ outputHTML, outputURLS });
     } catch (err) {
       reject(err);
     }
-
-  });
+  }).then(
+    result => { return result; },
+    error => { throw error; },
+    );
 }
 
 function scrapHTML(params) {
   const { url, element, level } = params;
   let currentLevel = 0;
+  const domain = getDomain(url);
   return co(function* () {
     // First Iteration
     const html = yield getSiteHTML(url);
-    const { outHTML, outURLS } = yield parseHTML(html, element);
+    const parsedHTML = yield parseHTML(html, element, domain);
 
-    console.log(outURLS);
-
-    return outURLS;
+    return parsedHTML;
   })
-  .catch((error) => { throw error; });
+  .catch(error => { throw error; });
 }
 
 module.exports = {

@@ -8,6 +8,7 @@
   "rules":{
     "vars-on-top": 2,
     "no-undef": 2,
+    "arrow-parens": 0,
     "no-unused-vars": ["error", { "argsIgnorePattern": "next" }],
     "import/newline-after-import": 0
   }

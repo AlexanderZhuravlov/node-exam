@@ -14,6 +14,11 @@ function normalizePort(val) {
   return false;
 }
 
+function getDomain(url) {
+  return url.replace('http://', '').replace('https://', '').split(/[/?#]/)[0];
+}
+
 module.exports = {
   normalizePort,
+  getDomain,
 };

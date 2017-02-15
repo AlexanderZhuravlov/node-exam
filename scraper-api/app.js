@@ -32,8 +32,8 @@ app.set('view engine', 'ejs');
 /**
  * App start
  */
-app.listen(app.get('port'), function() {
-  console.log( 'Node app is running on http://localhost:' + app.get('port') );
+app.listen(app.get('port'), () => {
+  console.log(`Node app is running on http://localhost: ${app.get('port')}`);
 });
 
 /**
@@ -46,7 +46,7 @@ app.use('/api/search', search);
  * Catch 404 and forward to error handler
  */
 app.use((req, res, next) => {
-  let err = new Error('Not Found');
+  const err = new Error('Not Found');
   err.status = 404;
   next(err);
 });
@@ -59,8 +59,11 @@ app.use((err, req, res, next) => {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
+  // TODO: Add handler to check instance of error
   res.status(err.status || 500);
-  res.json(err);
-  //res.render('error');
+  if (err.message instanceof Error) {
+    res.render('error', { error: err });
+  } else {
+    res.json(err);
+  }
 });

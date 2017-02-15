@@ -1,6 +1,7 @@
 import validator from 'validator';
 import errors from '../config/errors';
 import config from '../config';
+import { getDomain } from '../helpers/general';
 
 function validateParams(params) {
   return new Promise((resolve, reject) => {
@@ -16,6 +17,12 @@ function validateParams(params) {
   });
 }
 
+function validateURL(url, domain) {
+  if (typeof (url) === 'string' && validator.isURL(url) && getDomain(url) !== domain) return true;
+  return false;
+}
+
 module.exports = {
   validateParams,
+  validateURL,
 };
