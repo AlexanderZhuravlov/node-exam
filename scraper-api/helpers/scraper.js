@@ -1,6 +1,7 @@
 import got from 'got';
 import cheerio from 'cheerio';
 import co from 'co';
+import Q from 'q';
 import queue from '../helpers/queue';
 import { validateURL } from '../helpers/validator';
 import { getDomain } from '../helpers/general';
@@ -61,7 +62,7 @@ function parseHTML(data, element, domain) {
       const parser = cheerio.load(data);
       parser(element).each(function () {
         const elem = parser(this);
-        outputHTML.push(elem.html());
+        if (elem.html() !== '') outputHTML.push(elem.html());
         const links = findAllURLS(elem.html(), domain);
         if (Array.isArray(links)) outputURLS = outputURLS.concat(links);
       });
@@ -76,16 +77,48 @@ function parseHTML(data, element, domain) {
     );
 }
 
+function levelData(urls, element, domain) {
+  return co(function* () {
+    const settledHTML = yield Q.allSettled(urls.map(url => { return getSiteHTML(url); }));
+
+    const parsedData = yield settledHTML.map(result => {
+      if (result.state === 'fulfilled') {
+        return parseHTML(result.value, element, domain)
+          .then(output => { return output; })
+          .catch(error => { throw error; });
+      } else {
+        throw result.reason;
+      }
+    });
+
+    return parsedData;
+  })
+  .catch(error => { throw error; });
+}
+
 function scrapHTML(params) {
   const { url, element, level } = params;
-  let currentLevel = 0;
   const domain = getDomain(url);
   return co(function* () {
     // First Iteration
-    const html = yield getSiteHTML(url);
-    const parsedHTML = yield parseHTML(html, element, domain);
 
-    return parsedHTML;
+    const html = yield getSiteHTML(url);
+    let { outputHTML, outputURLS } = yield parseHTML(html, element, domain);
+
+    // Levels queue
+    if (outputURLS.length > 0) {
+
+      for (let i = 0; i < level; i++) {
+
+        const levelsHTML = yield levelData(outputURLS, element, domain);
+
+
+        console.log(levelsHTML);
+      }
+      //if (levelsHTML.length > 0) outputHTML = outputHTML.concat(levelsHTML);
+    }
+
+    return outputHTML;
   })
   .catch(error => { throw error; });
 }
