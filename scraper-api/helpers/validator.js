@@ -22,7 +22,21 @@ function validateURL(url, domain) {
   return false;
 }
 
+function checkResponse(response) {
+  // Get response content-type
+  let contentType = response.headers['content-type'];
+  contentType = contentType.split(';')[0];
+
+  if (config.ACCEPTABLE_CONTENT_TYPES.indexOf(contentType) !== -1
+    && response.statusMessage === config.ACCEPTABLE_STATUS_MESSAGE
+    && response.statusCode === config.ACCEPTABLE_STATUS_CODE) {
+    return true;
+  }
+  return false;
+}
+
 module.exports = {
   validateParams,
   validateURL,
+  checkResponse,
 };

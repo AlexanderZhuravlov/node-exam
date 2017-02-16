@@ -2,31 +2,17 @@ import got from 'got';
 import cheerio from 'cheerio';
 import co from 'co';
 import Q from 'q';
-import queue from '../helpers/queue';
-import { validateURL } from '../helpers/validator';
+import { validateURL, checkResponse } from '../helpers/validator';
 import { getDomain } from '../helpers/general';
-import config from '../config';
-import errors from '../config/errors';
-
-function checkResponse(response) {
-  // Get response content-type
-  let contentType = response.headers['content-type'];
-  contentType = contentType.split(';')[0];
-
-  if (config.ACCEPTABLE_CONTENT_TYPES.indexOf(contentType) !== -1
-    && response.statusMessage === config.ACCEPTABLE_STATUS_MESSAGE
-    && response.statusCode === config.ACCEPTABLE_STATUS_CODE) {
-    return true;
-  }
-  return false;
-}
 
 function getSiteHTML(url) {
   return new Promise((resolve, reject) => {
     got(url)
       .then((response) => {
+        console.log('processed', url, response.statusCode);
         if (!checkResponse(response)) {
-          reject(errors.notAcceptableResponse);
+          // Need add logger
+          resolve();
         }
         resolve(response.body);
       })
@@ -54,7 +40,7 @@ function findAllURLS(html, domain) {
   }
 }
 
-function parseHTML(data, element, domain) {
+function parseHTML(data = '', element, domain) {
   return new Promise((resolve, reject) => {
     const outputHTML = [];
     let outputURLS = [];
@@ -69,6 +55,7 @@ function parseHTML(data, element, domain) {
       outputURLS = Array.from(new Set(outputURLS));
       resolve({ outputHTML, outputURLS });
     } catch (err) {
+      console.log(err);
       reject(err);
     }
   }).then(
@@ -86,14 +73,40 @@ function levelData(urls, element, domain) {
         return parseHTML(result.value, element, domain)
           .then(output => { return output; })
           .catch(error => { throw error; });
-      } else {
-        throw result.reason;
       }
+      // Need add logger
+      return [];
+      //throw result.reason;
     });
-
     return parsedData;
   })
   .catch(error => { throw error; });
+}
+
+// TODO: improvements needed ))
+function* recurseGetData(limit, count = 0, urls, element, domain, output = []) {
+  if (count < limit) {
+    const lvlData = yield levelData(urls, element, domain);
+    if (Array.isArray(lvlData)) {
+      let lvlHtml = [];
+      let lvlUrls = [];
+      lvlData.forEach(item => {
+        if ('outputURLS' in item && 'outputHTML' in item) {
+          if (item.outputURLS.length > 0) lvlUrls = lvlUrls.concat(item.outputURLS);
+          if (item.outputHTML.length > 0) lvlHtml = lvlHtml.concat(item.outputHTML);
+        }
+      });
+      // TODO: Add filter for already parsed urls
+      lvlUrls = Array.from(new Set(lvlUrls));
+      if (lvlUrls.length > 0) {
+        const out = output.concat(lvlHtml);
+        return yield* recurseGetData(limit, count + 1, lvlUrls, element, domain, out);
+      }
+      return output;
+    }
+    return output;
+  }
+  return output;
 }
 
 function scrapHTML(params) {
@@ -101,21 +114,13 @@ function scrapHTML(params) {
   const domain = getDomain(url);
   return co(function* () {
     // First Iteration
-
     const html = yield getSiteHTML(url);
     let { outputHTML, outputURLS } = yield parseHTML(html, element, domain);
 
     // Levels queue
     if (outputURLS.length > 0) {
-
-      for (let i = 0; i < level; i++) {
-
-        const levelsHTML = yield levelData(outputURLS, element, domain);
-
-
-        console.log(levelsHTML);
-      }
-      //if (levelsHTML.length > 0) outputHTML = outputHTML.concat(levelsHTML);
+      const innerHTML = yield* recurseGetData(level, 0, outputURLS, element, domain);
+      if (innerHTML.length > 0) outputHTML = outputHTML.concat(innerHTML);
     }
 
     return outputHTML;
