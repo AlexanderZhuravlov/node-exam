@@ -4,7 +4,7 @@
 import express from 'express';
 import co from 'co';
 import { validateParams } from '../helpers/validator';
-import redis from '../helpers/redis';
+import redisClient from '../helpers/redis';
 import { scrapHTML } from '../helpers/scraper';
 const router = express.Router();
 
@@ -17,16 +17,28 @@ router.get('/', (req, res, next) => {
     const params = yield validateParams(req.query);
 
     // Check if result available into Redis
-    //console.log(key);
+    // https://redis.io/commands/hset
+    // https://redis.io/commands/hgetall
+    // http://stackoverflow.com/questions/24876198/redis-expire-values-in-a-list-or-set
+    //
+    const redisSearchResults = yield redisClient.searchInList(params);
+
+    console.log(redisSearchResults);
+
+
+    const setResultToRedis = yield redisClient.setInList(params);
+    console.log(setResultToRedis);
+
 
     // Scrap HTML
-    const scrappedHTML = yield scrapHTML(params);
+    //const scrappedHTML = yield scrapHTML(params);
 
 
     // Save result to Redis
 
+
     // Output result
-    res.json({ endpoint: 'GET search', prms: params, out: scrappedHTML });
+    res.json({ endpoint: 'GET search', prms: params, out: '' });
   })
   .catch(error => next({ message: error }));
 });

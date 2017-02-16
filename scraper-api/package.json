@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/AlexanderZhuravlov/node-exam#readme",
   "dependencies": {
+    "bluebird": "^3.4.7",
     "body-parser": "~1.16.0",
     "cheerio": "^0.22.0",
     "co": "^4.6.0",
@@ -33,6 +34,7 @@
     "express": "^4.14.1",
     "got": "^6.7.1",
     "morgan": "^1.8.1",
+    "object-hash": "^1.1.5",
     "q": "^1.4.1",
     "redis": "^2.6.5",
     "serve-favicon": "^2.3.2",
