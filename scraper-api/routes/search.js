@@ -6,6 +6,7 @@ import co from 'co';
 import { validateParams } from '../helpers/validator';
 import redisClient from '../helpers/redis';
 import { scrapHTML } from '../helpers/scraper';
+import errors from '../config/errors';
 const router = express.Router();
 
 /**
@@ -13,32 +14,24 @@ const router = express.Router();
  */
 router.get('/', (req, res, next) => {
   co(function* () {
+    let output;
     // Validate params
     const params = yield validateParams(req.query);
 
     // Check if result available into Redis
-    // https://redis.io/commands/hset
-    // https://redis.io/commands/hgetall
-    // http://stackoverflow.com/questions/24876198/redis-expire-values-in-a-list-or-set
-    //
     const redisSearchResults = yield redisClient.searchInList(params);
-
-    console.log(redisSearchResults);
-
-
-    const setResultToRedis = yield redisClient.setInList(params);
-    console.log(setResultToRedis);
-
-
-    // Scrap HTML
-    //const scrappedHTML = yield scrapHTML(params);
-
-
-    // Save result to Redis
-
-
-    // Output result
-    res.json({ endpoint: 'GET search', prms: params, out: '' });
+    if (redisSearchResults !== null) {
+      // If result available into redis
+      output = yield redisClient.getSearchResult(params);
+    } else {
+      // If result not available into redis
+      // - run scraper
+      output = yield scrapHTML(params);
+      // - save result to redis
+      yield redisClient.saveInRedis(params, output);
+    }
+    // Output results
+    res.json({ output });
   })
   .catch(error => next({ message: error }));
 });
@@ -47,14 +40,28 @@ router.get('/', (req, res, next) => {
  * GET /api/search/list
  */
 router.get('/list', (req, res, next) => {
-  res.json({ endpoint: 'GET search list', params: req.params });
+  co(function* () {
+    // Get search results
+    const result = yield redisClient.getAllSearch();
+    res.json(result);
+  })
+    .catch(error => next({ message: error }));
 });
 
 /**
  * DELETE /api/search/?url=https%3A%2F%2Fgoogle.com&element=h2&level=3
  */
 router.delete('/', (req, res, next) => {
-  res.json({ endpoint: 'DELETE search', params: req.params });
+  co(function* () {
+    // Validate params
+    const params = yield validateParams(req.query);
+    // Remove result from redis
+    const result = yield redisClient.deleteSearchResult(params);
+    // Handle result for errors
+    if (!result) res.status(404).json({ message: errors.searchResultsNotFound });
+    res.json({ message: 'Success' });
+  })
+    .catch(error => next({ message: error }));
 });
 
 module.exports = router;

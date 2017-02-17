@@ -12,4 +12,5 @@ module.exports = {
    * Response errors
    */
   notAcceptableResponse: 'Response from remote server is not acceptable',
+  searchResultsNotFound: 'Error - search result not found',
 };

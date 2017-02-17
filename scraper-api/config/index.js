@@ -4,6 +4,7 @@ module.exports = {
   REDIS_HOST: '127.0.0.1',
   REDIS_PORT: 6379,
   REDIS_SESSION_EXPIRE: 60 * 60 * 24,
+  REDIS_SEARCH_LIST: 'scraper_search_list',
   ACCEPTABLE_CONTENT_TYPES: ['text/html', 'text/plain'],
   ACCEPTABLE_STATUS_CODE: 200,
   ACCEPTABLE_STATUS_MESSAGE: 'OK',
