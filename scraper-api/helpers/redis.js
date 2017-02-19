@@ -23,15 +23,15 @@ function redisClient() {
 
 function saveToList(client, paramsHash, data) {
   return new Promise((resolve, reject) => {
-    const multi = client.multi();
-    for (let i = 0; i < data.length; i++) {
-      console.log(data[i]);
-      multi.rpush(paramsHash, data[i]);
+    try {
+      for (let i = 0; i < data.length; i++) {
+        client.rpush(paramsHash, data[i]);
+        if (i === (data.length - 1)) resolve(true);
+      }
     }
-    multi.exec((errors, results) => {
-      if (errors) reject(errors);
-      resolve(results);
-    });
+    catch(err) {
+      reject(err);
+    }
   });
 }
 
