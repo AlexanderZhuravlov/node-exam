@@ -6,9 +6,12 @@ import bodyParser from 'body-parser';
 import logger from 'morgan';
 import favicon from 'serve-favicon';
 import path from 'path';
+import SwaggerExpress from 'swagger-express-mw';
+import SwaggerUi from 'swagger-tools/middleware/swagger-ui';
 import { normalizePort } from './helpers/general';
 import { APP_PORT } from './config/index';
 import log from './helpers/logger';
+import swaggerConfig from './config/swagger';
 
 /**
  * Require Routes
@@ -29,6 +32,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+
+SwaggerExpress.create(swaggerConfig, (err, swaggerExpress) => {
+  if (err) { throw err; }
+  app.use(SwaggerUi(swaggerExpress.runner.swagger));
+  swaggerExpress.register(app);
+});
 
 /**
  * App start

@@ -13,7 +13,7 @@ Start app
 1) Add handler to check instance of error
 2) recurseGetData - improvements needed, such as - save to redis partially, improve logic for getting level data
 3) Add filter for already parsed urls
-4) Swagger
+4) Swagger - fix problems
 5) Add more tests
 
 ## CLI app for Scraper API
@@ -32,4 +32,3 @@ Using tool
 
 ##### TODO
 1) Add progress bar
-2) Add more tests
