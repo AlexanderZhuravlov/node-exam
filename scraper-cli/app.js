@@ -28,6 +28,7 @@ if (!command.element || command.element === 'undefined') {
   process.exit(1);
 }
 
+// TODO: add progress bar
 // HTTP request for scrapper API
 const searchParams = { url: command.url, element: command.element };
 if (command.level && command.level !== 'undefined') {
