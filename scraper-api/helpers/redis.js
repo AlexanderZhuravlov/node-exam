@@ -25,6 +25,7 @@ function saveToList(client, paramsHash, data) {
   return new Promise((resolve, reject) => {
     const multi = client.multi();
     for (let i = 0; i < data.length; i++) {
+      console.log(data[i]);
       multi.rpush(paramsHash, data[i]);
     }
     multi.exec((errors, results) => {
@@ -60,20 +61,16 @@ function* saveInRedis(params, data = []) {
 function* getSearchResult(params) {
   const client = yield redisClient();
   const paramsHash = hash(params);
-  const listLenght = client.llenAsync(paramsHash)
-    .then(res => {
-      console.log(res);
-      return res;
-    });
- /*
-  const result = yield client.getAsync(paramsHash)
-    .then(res => {
-      console.log(res);
-      return res;
-    });*/
-
-
-  return true;
+  // Check list
+  const listLenght = yield client.llenAsync(paramsHash)
+    .then(res => res);
+  if (listLenght !== 0) {
+    // Get list results
+    const searchResult = yield client.lrangeAsync(paramsHash, 0, -1)
+      .then(res => res);
+    return searchResult;
+  }
+  return false;
 }
 
 function* getAllSearch() {

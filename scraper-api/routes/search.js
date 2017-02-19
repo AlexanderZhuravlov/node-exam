@@ -23,7 +23,8 @@ router.get('/', (req, res, next) => {
     if (redisSearchResults !== null) {
       // If result available into redis
       output = yield redisClient.getSearchResult(params);
-    } else {
+    }
+    if (!output || output === 'undefined') {
       // If result not available into redis
       // - run scraper
       output = yield scrapHTML(params);
