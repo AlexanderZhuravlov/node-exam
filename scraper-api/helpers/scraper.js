@@ -83,7 +83,7 @@ function levelData(urls, element, domain) {
   .catch(error => { throw error; });
 }
 
-// TODO: improvements needed ))
+// TODO: improvements needed, such as - save to redis partially, improve logic for level data
 function* recurseGetData(limit, count = 0, urls, element, domain, output = []) {
   if (count < limit) {
     const lvlData = yield levelData(urls, element, domain);
