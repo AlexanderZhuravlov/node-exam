@@ -4,6 +4,7 @@ import co from 'co';
 import Q from 'q';
 import { validateURL, checkResponse } from '../helpers/validator';
 import { getDomain } from '../helpers/general';
+import log from '../helpers/logger';
 
 function getSiteHTML(url) {
   return new Promise((resolve, reject) => {
@@ -11,7 +12,7 @@ function getSiteHTML(url) {
       .then((response) => {
         console.log('processed', url, response.statusCode);
         if (!checkResponse(response)) {
-          // Need add logger
+          log.info('scrapper - getSiteHTML - checkResponse error');
           resolve();
         }
         resolve(response.body);
@@ -87,6 +88,7 @@ function levelData(urls, element, domain) {
 function* recurseGetData(limit, count = 0, urls, element, domain, output = []) {
   if (count < limit) {
     const lvlData = yield levelData(urls, element, domain);
+    log.info(lvlData);
     if (Array.isArray(lvlData)) {
       let lvlHtml = [];
       let lvlUrls = [];
@@ -118,11 +120,10 @@ function scrapHTML(params) {
     let { outputHTML, outputURLS } = yield parseHTML(html, element, domain);
 
     // Levels queue
-    if (outputURLS.length > 0) {
-      const innerHTML = yield* recurseGetData(level, 0, outputURLS, element, domain);
-      if (innerHTML.length > 0) outputHTML = outputHTML.concat(innerHTML);
+    if (outputURLS.length > 0 && outputHTML.length > 0) {
+        const innerHTML = yield* recurseGetData(level, 0, outputURLS, element, domain);
+        if (innerHTML.length > 0) outputHTML = outputHTML.concat(innerHTML);
     }
-
     return outputHTML;
   })
   .catch(error => { throw error; });

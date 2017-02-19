@@ -2,12 +2,13 @@
  * Require modules
  */
 import express from 'express';
-import logger from 'morgan';
 import bodyParser from 'body-parser';
+import logger from 'morgan';
 import favicon from 'serve-favicon';
 import path from 'path';
 import { normalizePort } from './helpers/general';
 import { APP_PORT } from './config/index';
+import log from './helpers/logger';
 
 /**
  * Require Routes
@@ -58,6 +59,9 @@ app.use((err, req, res, next) => {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  // Logger
+  log.error(err);
 
   // TODO: Add handler to check instance of error
   res.status(err.status || 500);
