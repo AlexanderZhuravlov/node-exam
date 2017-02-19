@@ -53,6 +53,8 @@ function parseHTML(data = '', element, domain) {
         const links = findAllURLS(elem.html(), domain);
         if (Array.isArray(links)) outputURLS = outputURLS.concat(links);
       });
+      console.log(outputURLS);
+      console.log(outputHTML);
       outputURLS = Array.from(new Set(outputURLS));
       resolve({ outputHTML, outputURLS });
     } catch (err) {
@@ -124,6 +126,7 @@ function scrapHTML(params) {
         const innerHTML = yield* recurseGetData(level, 0, outputURLS, element, domain);
         if (innerHTML.length > 0) outputHTML = outputHTML.concat(innerHTML);
     }
+
     return outputHTML;
   })
   .catch(error => { throw error; });

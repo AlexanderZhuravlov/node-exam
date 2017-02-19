@@ -29,7 +29,9 @@ router.get('/', (req, res, next) => {
       // - run scraper
       output = yield scrapHTML(params);
       // - save result to redis
-      yield redisClient.saveInRedis(params, output);
+      if (output.length > 0) {
+        yield redisClient.saveInRedis(params, output);
+      }
     }
     // Output results
     res.json({ output });
