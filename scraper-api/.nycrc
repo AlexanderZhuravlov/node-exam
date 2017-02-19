@@ -1,0 +1,12 @@
+{
+    "include": [
+      "routes/**/*.js",
+      "helpers/**/*.js"
+    ],
+    "reporter": [
+      "text",
+      "html"
+    ],
+    "all": true,
+    "check-coverage": true
+}
